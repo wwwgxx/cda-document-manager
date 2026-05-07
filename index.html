@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>共享文档管理 - CDA文档管理系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Tech Background -->
+        <div class="tech-bg"></div>
+        <div class="tech-grid"></div>
+
+        <!-- 顶部导航栏 -->
+        <header class="top-nav">
+            <div class="top-nav-left">
+                <div class="hospital-logo">
+                    <svg viewBox="0 0 40 40" width="28" height="28">
+                        <defs><linearGradient id="navGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#00d2be"/><stop offset="100%" style="stop-color:#00a89d"/></linearGradient></defs>
+                        <circle cx="20" cy="20" r="18" fill="none" stroke="url(#navGrad)" stroke-width="1.5"/>
+                        <path d="M20 8 L20 32 M8 20 L32 20" stroke="url(#navGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="20" cy="20" r="8" fill="none" stroke="url(#navGrad)" stroke-width="1"/>
+                    </svg>
+                </div>
+                <span class="top-nav-title">共享文档管理</span>
+            </div>
+            <div class="top-nav-right">
+                <span class="top-nav-clock" id="topClock"></span>
+                <div class="nav-divider"></div>
+                <span class="nav-icon home-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="rgba(0,210,190,0.5)">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                </span>
+                <span class="top-nav-user">{{ loginUser }}</span>
+                <span class="nav-logout" @click="doLogout">退出</span>
+            </div>
+        </header>
+
+        <div class="main-container">
+            <!-- 左侧导航栏 -->
+            <aside class="sidebar">
+                <div class="sidebar-toggle" @click="toggleSidebar">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="rgba(0,210,190,0.4)">
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </div>
+                <nav class="sidebar-menu">
+                    <div class="menu-item" :class="{ active: currentMenu === 'overview' }" @click="switchMenu('overview')">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">CDA概览</span>
+                    </div>
+                    <div class="menu-item" :class="{ active: currentMenu === 'search' }" @click="switchMenu('search')">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">文档检索</span>
+                    </div>
+                    <div class="menu-item" :class="{ active: currentMenu === 'doclist' }" @click="switchMenu('doclist')">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">文档列表</span>
+                    </div>
+                    <div class="menu-item" :class="{ active: currentMenu === 'standard' }" @click="switchMenu('standard')">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">标准管理</span>
+                    </div>
+                    <div class="menu-item" :class="{ active: currentMenu === 'datasource' }" @click="switchMenu('datasource')">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">数据源管理</span>
+                    </div>
+                    <div class="menu-item" :class="{ active: currentMenu === 'delete' }" @click="switchMenu('delete')">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">数据删除</span>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- ====== 主内容区 ====== -->
+            <main class="content">
+
+                <!-- ====== 1. CDA概览 ====== -->
+                <div v-show="currentMenu === 'overview'" class="page-content">
+                    <div class="page-scroll">
+                        <!-- 概览统计卡片 -->
+                        <div class="overview-cards">
+                            <div class="ov-card">
+                                <div class="ov-card-icon bg-teal">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                                </div>
+                                <div class="ov-card-body">
+                                    <div class="ov-card-value">3,613</div>
+                                    <div class="ov-card-label">CDA文档总数</div>
+                                </div>
+                            </div>
+                            <div class="ov-card">
+                                <div class="ov-card-icon bg-green">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                </div>
+                                <div class="ov-card-body">
+                                    <div class="ov-card-value">3,456</div>
+                                    <div class="ov-card-label">已生成</div>
+                                </div>
+                            </div>
+                            <div class="ov-card">
+                                <div class="ov-card-icon bg-yellow">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                </div>
+                                <div class="ov-card-body">
+                                    <div class="ov-card-value">108</div>
+                                    <div class="ov-card-label">待审核</div>
+                                </div>
+                            </div>
+                            <div class="ov-card">
+                                <div class="ov-card-icon bg-red">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                                </div>
+                                <div class="ov-card-body">
+                                    <div class="ov-card-value">49</div>
+                                    <div class="ov-card-label">异常文档</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overview-grid">
+                            <!-- 文档类型分布 -->
+                            <div class="ov-panel">
+                                <h3 class="panel-title">文档类型分布</h3>
+                                <div class="bar-chart">
+                                    <div class="bar-row" v-for="(item, idx) in docTypeStats" :key="idx">
+                                        <span class="bar-label">{{ item.name }}</span>
+                                        <div class="bar-track">
+                                            <div class="bar-fill" :style="{ width: item.pct + '%', background: item.color }"></div>
+                                        </div>
+                                        <span class="bar-value">{{ item.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 科室覆盖 -->
+                            <div class="ov-panel">
+                                <h3 class="panel-title">科室文档覆盖率</h3>
+                                <div class="dept-grid">
+                                    <div class="dept-item" v-for="(d, idx) in deptCoverage" :key="idx">
+                                        <div class="dept-ring">
+                                            <svg viewBox="0 0 36 36" class="ring-svg">
+                                                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e8e8e8" stroke-width="3"/>
+                                                <path class="ring-fg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" :stroke="d.color" stroke-width="3" :stroke-dasharray="d.pct + ', 100'" stroke-linecap="round"/>
+                                            </svg>
+                                            <span class="ring-text">{{ d.pct }}%</span>
+                                        </div>
+                                        <span class="dept-name">{{ d.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overview-grid">
+                            <!-- 数据源状态 -->
+                            <div class="ov-panel">
+                                <h3 class="panel-title">数据源对接状态</h3>
+                                <div class="source-list">
+                                    <div class="source-item" v-for="(s, idx) in sourceStatus" :key="idx">
+                                        <span class="source-dot" :class="'dot-' + s.status"></span>
+                                        <span class="source-name">{{ s.name }}</span>
+                                        <span class="source-type">{{ s.type }}</span>
+                                        <span class="source-time">最后同步: {{ s.lastSync }}</span>
+                                        <span class="source-status-text" :class="'text-' + s.status">{{ s.statusText }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 生成趋势 -->
+                            <div class="ov-panel">
+                                <h3 class="panel-title">近7日文档生成趋势</h3>
+                                <div class="trend-chart">
+                                    <div class="trend-bars">
+                                        <div class="trend-bar-wrap" v-for="(t, idx) in trendData" :key="idx">
+                                            <div class="trend-bar" :style="{ height: t.pct + '%' }"></div>
+                                            <span class="trend-val">{{ t.count }}</span>
+                                            <span class="trend-date">{{ t.date }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 质量指标 + 异常告警 -->
+                        <div class="overview-grid">
+                            <div class="ov-panel">
+                                <h3 class="panel-title">质量指标</h3>
+                                <div class="quality-list">
+                                    <div class="quality-item">
+                                        <span class="ql-label">格式校验通过率</span>
+                                        <div class="ql-bar"><div class="ql-fill" style="width:98.6%;background:#00695c"></div></div>
+                                        <span class="ql-value text-success">98.6%</span>
+                                    </div>
+                                    <div class="quality-item">
+                                        <span class="ql-label">必填字段完整率</span>
+                                        <div class="ql-bar"><div class="ql-fill" style="width:96.2%;background:#00695c"></div></div>
+                                        <span class="ql-value text-success">96.2%</span>
+                                    </div>
+                                    <div class="quality-item">
+                                        <span class="ql-label">术语编码匹配率</span>
+                                        <div class="ql-bar"><div class="ql-fill" style="width:93.8%;background:#e6a23c"></div></div>
+                                        <span class="ql-value text-warning">93.8%</span>
+                                    </div>
+                                    <div class="quality-item">
+                                        <span class="ql-label">EMPI匹配合格率</span>
+                                        <div class="ql-bar"><div class="ql-fill" style="width:97.1%;background:#00695c"></div></div>
+                                        <span class="ql-value text-success">97.1%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ov-panel">
+                                <h3 class="panel-title">异常告警</h3>
+                                <div class="alert-list">
+                                    <div class="alert-item" v-for="(a, idx) in alerts" :key="idx">
+                                        <span class="alert-dot" :class="'alert-' + a.level"></span>
+                                        <div class="alert-body">
+                                            <div class="alert-msg">{{ a.msg }}</div>
+                                            <div class="alert-time">{{ a.time }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== 2. 文档检索 ====== -->
+                <div v-show="currentMenu === 'search'" class="page-content">
+                    <div class="search-area">
+                        <div class="search-row">
+                            <div class="search-field">
+                                <select v-model="searchType" class="search-select">
+                                    <option value="idcard">身份证号</option>
+                                    <option value="patientId">患者ID</option>
+                                    <option value="name">姓名</option>
+                                    <option value="empi">EMPI</option>
+                                </select>
+                                <input type="text" v-model="searchValue" class="search-input" :placeholder="searchPlaceholder">
+                            </div>
+                            <div class="search-field">
+                                <label class="search-label">流水号:</label>
+                                <input type="text" v-model="serialNo" class="search-input" placeholder="请输入流水号" style="width:160px">
+                            </div>
+                            <div class="search-actions">
+                                <button class="btn btn-outline" @click="toggleDesensitize">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:4px"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                                    数据脱敏
+                                </button>
+                                <button class="btn btn-outline" @click="resetSearch">重置</button>
+                                <button class="btn btn-primary" @click="doSearch">查询</button>
+                            </div>
+                        </div>
+                        <div class="search-row search-row-bottom">
+                            <div class="search-field">
+                                <label class="search-label">文档类型:</label>
+                                <select v-model="docType" class="search-select" style="min-width:180px">
+                                    <option value="">全部</option>
+                                    <option v-for="dt in docTypeOptions" :key="dt.value" :value="dt.value">{{ dt.label }}</option>
+                                </select>
+                            </div>
+                            <div class="search-field">
+                                <label class="search-label">就诊科室:</label>
+                                <select v-model="department" class="search-select dept-select">
+                                    <option value="">全部科室</option>
+                                    <option v-for="dept in departmentOptions" :key="dept" :value="dept">{{ dept }}</option>
+                                </select>
+                            </div>
+                            <div class="search-field">
+                                <label class="search-label">入院时间:</label>
+                                <input type="date" v-model="dateFrom" class="search-input" style="width:140px">
+                                <span style="color:#999">至</span>
+                                <input type="date" v-model="dateTo" class="search-input" style="width:140px">
+                            </div>
+                            <div class="search-actions">
+                                <button class="btn btn-export" @click="exportData">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:4px"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                                    导出数据
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-bar">
+                        <div class="stat-item"><span class="stat-label">CDA文档总数</span><span class="stat-value">{{ totalCount }}</span></div>
+                        <div class="stat-item"><span class="stat-label">已生成</span><span class="stat-value text-success">{{ generatedCount }}</span></div>
+                        <div class="stat-item"><span class="stat-label">待审核</span><span class="stat-value text-warning">{{ pendingCount }}</span></div>
+                        <div class="stat-item"><span class="stat-label">异常文档</span><span class="stat-value text-danger">{{ errorCount }}</span></div>
+                    </div>
+
+                    <div class="doc-type-header">
+                        <h3 class="doc-type-title">{{ currentDocTypeLabel }}</h3>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>empi</th><th>姓名</th><th>患者ID</th><th>身份证号</th><th>就诊科室</th><th>入院时间</th><th>病例标题</th><th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(row, index) in tableData" :key="index">
+                                    <td class="empi-cell">{{ desensitize ? desensitizeEmpi(row.empi) : row.empi }}</td>
+                                    <td>{{ desensitize ? desensitizeName(row.name) : row.name }}</td>
+                                    <td>{{ row.patientId }}</td>
+                                    <td class="idcard-cell"><span class="desensitized">{{ desensitize ? desensitizeIdcard(row.idcard) : row.idcard }}</span></td>
+                                    <td>{{ row.department }}</td>
+                                    <td>{{ row.admissionDate }}</td>
+                                    <td>{{ row.caseTitle }}</td>
+                                    <td><a href="javascript:void(0)" class="link-action" @click="viewDocument(row)">查看</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <span class="pagination-info">共 {{ filteredTotal }} 条</span>
+                        <button class="page-btn" :disabled="currentPage===1" @click="changePage(currentPage-1)">上一页</button>
+                        <template v-for="page in visiblePages">
+                            <button v-if="page==='...'" :key="'dots'" class="page-btn page-dots" disabled>...</button>
+                            <button v-else :key="page" class="page-btn" :class="{active:page===currentPage}" @click="changePage(page)">{{page}}</button>
+                        </template>
+                        <button class="page-btn" :disabled="currentPage===totalPages" @click="changePage(currentPage+1)">下一页</button>
+                        <select v-model="pageSize" class="page-size-select" @change="changePageSize">
+                            <option :value="10">10 条/页</option><option :value="20">20 条/页</option><option :value="50">50 条/页</option><option :value="100">100 条/页</option>
+                        </select>
+                        <span class="page-jump">到第 <input type="number" v-model.number="jumpPage" class="page-jump-input" min="1" :max="totalPages" @keyup.enter="doJump"> 页 <button class="page-btn page-jump-btn" @click="doJump">确定</button></span>
+                    </div>
+                </div>
+
+                <!-- ====== 3. 文档列表 ====== -->
+                <div v-show="currentMenu === 'doclist'" class="page-content">
+                    <div class="search-area">
+                        <div class="search-row">
+                            <div class="search-field">
+                                <label class="search-label">文档状态:</label>
+                                <select v-model="doclistStatus" class="search-select">
+                                    <option value="">全部</option>
+                                    <option value="generated">已生成</option>
+                                    <option value="submitted">已提交</option>
+                                    <option value="registered">已注册</option>
+                                    <option value="archived">已归档</option>
+                                    <option value="error">异常</option>
+                                </select>
+                            </div>
+                            <div class="search-field">
+                                <label class="search-label">文档类型:</label>
+                                <select v-model="doclistDocType" class="search-select" style="min-width:180px">
+                                    <option value="">全部</option>
+                                    <option v-for="dt in docTypeOptions" :key="dt.value" :value="dt.value">{{ dt.label }}</option>
+                                </select>
+                            </div>
+                            <div class="search-field">
+                                <label class="search-label">注册状态:</label>
+                                <select v-model="doclistRegStatus" class="search-select">
+                                    <option value="">全部</option>
+                                    <option value="registered">已注册</option>
+                                    <option value="unregistered">未注册</option>
+                                    <option value="failed">注册失败</option>
+                                </select>
+                            </div>
+                            <div class="search-actions">
+                                <button class="btn btn-outline" @click="batchRegist" :disabled="selectedDocs.length===0">批量注册</button>
+                                <button class="btn btn-outline" @click="batchExport" :disabled="selectedDocs.length===0">批量导出</button>
+                                <button class="btn btn-primary" @click="batchGenerate" :disabled="selectedDocs.length===0">批量生成</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-list-header">
+                        <span>共 {{ doclistFilteredTotal }} 条文档</span>
+                        <label class="checkbox-label"><input type="checkbox" @change="toggleSelectAll" :checked="isAllSelected"> 全选</label>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px"><input type="checkbox" @change="toggleSelectAll" :checked="isAllSelected"></th>
+                                    <th>文档编号</th><th>患者姓名</th><th>文档类型</th><th>生成时间</th><th>文档状态</th><th>注册状态</th><th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(row, idx) in doclistTableData" :key="idx">
+                                    <td><input type="checkbox" :value="row.id" v-model="selectedDocs"></td>
+                                    <td class="empi-cell">{{ row.docNo }}</td>
+                                    <td>{{ row.name }}</td>
+                                    <td>{{ row.docTypeName }}</td>
+                                    <td>{{ row.generateTime }}</td>
+                                    <td><span class="status-badge" :class="'status-' + row.status">{{ row.statusText }}</span></td>
+                                    <td><span class="status-badge" :class="'reg-' + row.regStatus">{{ row.regStatusText }}</span></td>
+                                    <td>
+                                        <a href="javascript:void(0)" class="link-action" @click="viewDocDetail(row)">查看</a>
+                                        <a href="javascript:void(0)" class="link-action" style="margin-left:8px" @click="downloadCDA">下载</a>
+                                        <a href="javascript:void(0)" class="link-action" style="margin-left:8px;color:#e6a23c" v-if="row.regStatus==='unregistered'||row.regStatus==='failed'" @click="registOne(row)">注册</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <span class="pagination-info">共 {{ doclistFilteredTotal }} 条</span>
+                        <button class="page-btn" :disabled="doclistPage===1" @click="doclistPage--">上一页</button>
+                        <button class="page-btn active">{{ doclistPage }}</button>
+                        <button class="page-btn" :disabled="doclistPage>=doclistTotalPages" @click="doclistPage++">下一页</button>
+                        <select v-model="doclistPageSize" class="page-size-select"><option :value="10">10 条/页</option><option :value="20">20 条/页</option></select>
+                    </div>
+
+                    <!-- 操作日志弹窗 -->
+                    <div class="modal-overlay" v-if="showLogModal" @click.self="showLogModal=false">
+                        <div class="modal" style="width:600px">
+                            <div class="modal-header"><h3 class="modal-title">操作日志</h3><button class="modal-close" @click="showLogModal=false">&times;</button></div>
+                            <div class="modal-body">
+                                <div class="log-timeline">
+                                    <div class="log-item" v-for="(log, idx) in operationLogs" :key="idx">
+                                        <div class="log-dot" :class="'log-' + log.type"></div>
+                                        <div class="log-content">
+                                            <div class="log-action">{{ log.action }}</div>
+                                            <div class="log-detail">{{ log.detail }}</div>
+                                            <div class="log-meta">{{ log.user }} | {{ log.time }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer"><button class="btn btn-outline" @click="showLogModal=false">关闭</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== 4. 标准管理 ====== -->
+                <div v-show="currentMenu === 'standard'" class="page-content">
+                    <div class="tab-bar">
+                        <div class="tab-item" :class="{active:standardTab==='template'}" @click="standardTab='template'">CDA模板管理</div>
+                        <div class="tab-item" :class="{active:standardTab==='mapping'}" @click="standardTab='mapping'">数据元映射</div>
+                        <div class="tab-item" :class="{active:standardTab==='terminology'}" @click="standardTab='terminology'">术语编码</div>
+                        <div class="tab-item" :class="{active:standardTab==='coding'}" @click="standardTab='coding'">编码对照</div>
+                        <div class="tab-item" :class="{active:standardTab==='compliance'}" @click="standardTab='compliance'">合规性检查</div>
+                    </div>
+
+                    <!-- CDA模板管理 -->
+                    <div v-show="standardTab==='template'" class="tab-content">
+                        <div class="toolbar">
+                            <button class="btn btn-primary" @click="alert('新增模板')">+ 新增模板</button>
+                            <span class="toolbar-info">共 {{ cdaTemplates.length }} 个模板</span>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead><tr><th>模板编号</th><th>模板名称</th><th>文档类型</th><th>版本</th><th>HL7标准</th><th>状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(t, idx) in cdaTemplates" :key="idx">
+                                        <td class="empi-cell">{{ t.code }}</td>
+                                        <td>{{ t.name }}</td>
+                                        <td>{{ t.docType }}</td>
+                                        <td>v{{ t.version }}</td>
+                                        <td>CDA R2</td>
+                                        <td><span class="status-badge" :class="t.enabled?'status-generated':'status-error'">{{ t.enabled?'启用':'停用' }}</span></td>
+                                        <td>
+                                            <a href="javascript:void(0)" class="link-action" @click="alert('查看模板详情')">查看</a>
+                                            <a href="javascript:void(0)" class="link-action" style="margin-left:8px" @click="alert('编辑模板')">编辑</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 数据元映射 -->
+                    <div v-show="standardTab==='mapping'" class="tab-content">
+                        <div class="search-area" style="border:none;padding-bottom:0">
+                            <div class="search-row">
+                                <div class="search-field">
+                                    <label class="search-label">标准数据元:</label>
+                                    <input type="text" class="search-input" placeholder="如 DE02.01.039.00" v-model="mappingSearch" style="width:200px">
+                                </div>
+                                <div class="search-field">
+                                    <label class="search-label">映射状态:</label>
+                                    <select class="search-select"><option value="">全部</option><option value="mapped">已映射</option><option value="unmapped">未映射</option></select>
+                                </div>
+                                <div class="search-actions"><button class="btn btn-primary">查询</button></div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead><tr><th>标准数据元编码</th><th>标准名称</th><th>数据类型</th><th>院内字段</th><th>映射状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(m, idx) in dataMappings" :key="idx">
+                                        <td class="empi-cell">{{ m.stdCode }}</td>
+                                        <td>{{ m.stdName }}</td>
+                                        <td>{{ m.dataType }}</td>
+                                        <td>{{ m.hisField }}</td>
+                                        <td><span class="status-badge" :class="m.mapped?'status-generated':'status-pending'">{{ m.mapped?'已映射':'未映射' }}</span></td>
+                                        <td><a href="javascript:void(0)" class="link-action" @click="alert('编辑映射关系')">编辑</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 术语编码 -->
+                    <div v-show="standardTab==='terminology'" class="tab-content">
+                        <div class="toolbar">
+                            <div class="search-row" style="margin:0">
+                                <div class="search-field">
+                                    <label class="search-label">编码类型:</label>
+                                    <select class="search-select" v-model="termType">
+                                        <option value="">全部</option>
+                                        <option value="icd10">ICD-10 诊断编码</option>
+                                        <option value="icd9">ICD-9-CM 手术编码</option>
+                                        <option value="dept">科室编码</option>
+                                        <option value="drug">药品编码</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary">查询</button>
+                                <button class="btn btn-outline">导入码表</button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead><tr><th>编码</th><th>名称</th><th>类型</th><th>版本</th><th>条目数</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(t, idx) in terminologyList" :key="idx">
+                                        <td class="empi-cell">{{ t.code }}</td>
+                                        <td>{{ t.name }}</td>
+                                        <td>{{ t.typeName }}</td>
+                                        <td>{{ t.version }}</td>
+                                        <td>{{ t.count }}</td>
+                                        <td><a href="javascript:void(0)" class="link-action" @click="alert('查看编码明细')">查看</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 编码对照 -->
+                    <div v-show="standardTab==='coding'" class="tab-content">
+                        <div class="toolbar">
+                            <button class="btn btn-primary">+ 新增对照</button>
+                            <button class="btn btn-outline">批量导入</button>
+                            <span class="toolbar-info">共 {{ codingMappings.length }} 条对照记录</span>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead><tr><th>院内编码</th><th>院内名称</th><th>标准编码</th><th>标准名称</th><th>编码类型</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(c, idx) in codingMappings" :key="idx">
+                                        <td class="empi-cell">{{ c.hisCode }}</td>
+                                        <td>{{ c.hisName }}</td>
+                                        <td class="empi-cell">{{ c.stdCode }}</td>
+                                        <td>{{ c.stdName }}</td>
+                                        <td>{{ c.type }}</td>
+                                        <td><a href="javascript:void(0)" class="link-action" @click="alert('编辑对照')">编辑</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 合规性检查 -->
+                    <div v-show="standardTab==='compliance'" class="tab-content">
+                        <div class="compliance-header">
+                            <button class="btn btn-primary" @click="runComplianceCheck">执行合规检查</button>
+                            <span class="toolbar-info" v-if="complianceResult">上次检查: 2024-07-30 14:30</span>
+                        </div>
+                        <div class="compliance-cards">
+                            <div class="comp-card" v-for="(r, idx) in complianceItems" :key="idx">
+                                <div class="comp-icon" :class="r.pass?'comp-pass':'comp-fail'">
+                                    <svg v-if="r.pass" viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    <svg v-else viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                </div>
+                                <div class="comp-body">
+                                    <div class="comp-title">{{ r.name }}</div>
+                                    <div class="comp-desc">{{ r.desc }}</div>
+                                    <div class="comp-result">{{ r.pass ? '通过' : r.failCount + ' 项不合规' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== 5. 数据源管理 ====== -->
+                <div v-show="currentMenu === 'datasource'" class="page-content">
+                    <div class="search-area">
+                        <div class="search-row">
+                            <div class="search-field">
+                                <label class="search-label">系统名称:</label>
+                                <input type="text" class="search-input" placeholder="请输入系统名称" style="width:180px">
+                            </div>
+                            <div class="search-field">
+                                <label class="search-label">连接状态:</label>
+                                <select class="search-select">
+                                    <option value="">全部</option>
+                                    <option value="online">在线</option>
+                                    <option value="offline">离线</option>
+                                    <option value="timeout">超时</option>
+                                </select>
+                            </div>
+                            <div class="search-actions">
+                                <button class="btn btn-outline">重置</button>
+                                <button class="btn btn-primary">查询</button>
+                                <button class="btn btn-export">+ 新增数据源</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-cards">
+                        <div class="ds-card" v-for="(ds, idx) in dataSources" :key="idx">
+                            <div class="ds-card-header">
+                                <div class="ds-card-title">
+                                    <span class="source-dot" :class="'dot-' + ds.status" style="margin-right:8px"></span>
+                                    {{ ds.name }}
+                                </div>
+                                <span class="status-badge" :class="'status-' + ds.status">{{ ds.statusText }}</span>
+                            </div>
+                            <div class="ds-card-body">
+                                <div class="ds-info"><span class="ds-label">系统类型:</span><span>{{ ds.type }}</span></div>
+                                <div class="ds-info"><span class="ds-label">接口方式:</span><span>{{ ds.interface }}</span></div>
+                                <div class="ds-info"><span class="ds-label">连接地址:</span><span class="empi-cell">{{ ds.url }}</span></div>
+                                <div class="ds-info"><span class="ds-label">同步策略:</span><span>{{ ds.syncStrategy }}</span></div>
+                                <div class="ds-info"><span class="ds-label">最后同步:</span><span>{{ ds.lastSync }}</span></div>
+                                <div class="ds-info"><span class="ds-label">数据量:</span><span>{{ ds.dataCount }} 条/日</span></div>
+                            </div>
+                            <div class="ds-card-footer">
+                                <a href="javascript:void(0)" class="link-action" @click="alert('编辑数据源配置')">编辑</a>
+                                <a href="javascript:void(0)" class="link-action" style="margin-left:12px" @click="alert('测试连接')">测试连接</a>
+                                <a href="javascript:void(0)" class="link-action" style="margin-left:12px" @click="showLogModal=true">接口日志</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 接口日志弹窗 -->
+                    <div class="modal-overlay" v-if="showLogModal" @click.self="showLogModal=false">
+                        <div class="modal" style="width:700px">
+                            <div class="modal-header"><h3 class="modal-title">接口调用日志</h3><button class="modal-close" @click="showLogModal=false">&times;</button></div>
+                            <div class="modal-body">
+                                <table class="data-table">
+                                    <thead><tr><th>时间</th><th>接口</th><th>请求方式</th><th>状态</th><th>耗时</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="(log, idx) in apiLogs" :key="idx">
+                                            <td>{{ log.time }}</td>
+                                            <td class="empi-cell">{{ log.endpoint }}</td>
+                                            <td>{{ log.method }}</td>
+                                            <td><span class="status-badge" :class="log.ok?'status-generated':'status-error'">{{ log.ok?'200':'500' }}</span></td>
+                                            <td>{{ log.duration }}ms</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="modal-footer"><button class="btn btn-outline" @click="showLogModal=false">关闭</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== 6. 数据删除 ====== -->
+                <div v-show="currentMenu === 'delete'" class="page-content">
+                    <div class="tab-bar">
+                        <div class="tab-item" :class="{active:deleteTab==='apply'}" @click="deleteTab='apply'">删除申请</div>
+                        <div class="tab-item" :class="{active:deleteTab==='audit'}" @click="deleteTab='audit'">审批管理</div>
+                        <div class="tab-item" :class="{active:deleteTab==='log'}" @click="deleteTab='log'">审计日志</div>
+                        <div class="tab-item" :class="{active:deleteTab==='report'}" @click="deleteTab='report'">合规报告</div>
+                    </div>
+
+                    <!-- 删除申请 -->
+                    <div v-show="deleteTab==='apply'" class="tab-content">
+                        <div class="search-area" style="border:none">
+                            <div class="search-row">
+                                <div class="search-field">
+                                    <label class="search-label">患者EMPI:</label>
+                                    <input type="text" class="search-input" placeholder="请输入EMPI" style="width:200px">
+                                </div>
+                                <div class="search-field">
+                                    <label class="search-label">申请状态:</label>
+                                    <select class="search-select">
+                                        <option value="">全部</option><option value="pending">待审批</option><option value="approved">已通过</option><option value="rejected">已驳回</option><option value="executed">已执行</option>
+                                    </select>
+                                </div>
+                                <div class="search-actions">
+                                    <button class="btn btn-primary">查询</button>
+                                    <button class="btn btn-export" style="background:#f56c6c;border-color:#f56c6c">+ 新增删除申请</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead><tr><th>申请编号</th><th>患者EMPI</th><th>患者姓名</th><th>删除原因</th><th>影响文档数</th><th>申请人</th><th>申请时间</th><th>状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(d, idx) in deleteRequests" :key="idx">
+                                        <td class="empi-cell">{{ d.applyNo }}</td>
+                                        <td class="empi-cell">{{ d.empi }}</td>
+                                        <td>{{ d.name }}</td>
+                                        <td>{{ d.reason }}</td>
+                                        <td>{{ d.docCount }}</td>
+                                        <td>{{ d.applicant }}</td>
+                                        <td>{{ d.applyTime }}</td>
+                                        <td><span class="status-badge" :class="'status-' + d.status">{{ d.statusText }}</span></td>
+                                        <td><a href="javascript:void(0)" class="link-action" @click="alert('查看影响评估')">影响评估</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 审批管理 -->
+                    <div v-show="deleteTab==='audit'" class="tab-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead><tr><th>申请编号</th><th>患者姓名</th><th>删除原因</th><th>提交时间</th><th>审批状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(a, idx) in auditList" :key="idx">
+                                        <td class="empi-cell">{{ a.applyNo }}</td>
+                                        <td>{{ a.name }}</td>
+                                        <td>{{ a.reason }}</td>
+                                        <td>{{ a.time }}</td>
+                                        <td><span class="status-badge" :class="'status-' + a.status">{{ a.statusText }}</span></td>
+                                        <td>
+                                            <a v-if="a.status==='pending'" href="javascript:void(0)" class="link-action" style="color:#00695c" @click="alert('审批通过')">通过</a>
+                                            <a v-if="a.status==='pending'" href="javascript:void(0)" class="link-action" style="margin-left:8px;color:#f56c6c" @click="alert('驳回')">驳回</a>
+                                            <a v-else href="javascript:void(0)" class="link-action" @click="alert('查看详情')">查看</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 审计日志 -->
+                    <div v-show="deleteTab==='log'" class="tab-content">
+                        <div class="search-area" style="border:none">
+                            <div class="search-row">
+                                <div class="search-field">
+                                    <label class="search-label">操作类型:</label>
+                                    <select class="search-select">
+                                        <option value="">全部</option><option>申请创建</option><option>审批通过</option><option>审批驳回</option><option>执行删除</option>
+                                    </select>
+                                </div>
+                                <div class="search-field">
+                                    <label class="search-label">操作人:</label>
+                                    <input type="text" class="search-input" placeholder="请输入操作人" style="width:140px">
+                                </div>
+                                <div class="search-actions"><button class="btn btn-primary">查询</button><button class="btn btn-outline">导出日志</button></div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead><tr><th>时间</th><th>操作类型</th><th>操作人</th><th>操作内容</th><th>影响数据</th><th>IP地址</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(l, idx) in auditLogs" :key="idx">
+                                        <td>{{ l.time }}</td>
+                                        <td><span class="status-badge" :class="'status-' + l.typeClass">{{ l.type }}</span></td>
+                                        <td>{{ l.user }}</td>
+                                        <td>{{ l.content }}</td>
+                                        <td>{{ l.target }}</td>
+                                        <td class="empi-cell">{{ l.ip }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 合规报告 -->
+                    <div v-show="deleteTab==='report'" class="tab-content">
+                        <div class="compliance-header">
+                            <button class="btn btn-primary">生成合规报告</button>
+                            <button class="btn btn-outline">导出PDF</button>
+                        </div>
+                        <div class="report-cards">
+                            <div class="report-card">
+                                <div class="report-title">数据删除合规统计</div>
+                                <div class="report-stats">
+                                    <div class="report-stat"><div class="rs-value">12</div><div class="rs-label">本季度删除申请</div></div>
+                                    <div class="report-stat"><div class="rs-value text-success">8</div><div class="rs-label">审批通过</div></div>
+                                    <div class="report-stat"><div class="rs-value text-danger">2</div><div class="rs-label">审批驳回</div></div>
+                                    <div class="report-stat"><div class="rs-value text-warning">2</div><div class="rs-label">待审批</div></div>
+                                </div>
+                            </div>
+                            <div class="report-card">
+                                <div class="report-title">审计完整性</div>
+                                <div class="report-stats">
+                                    <div class="report-stat"><div class="rs-value text-success">100%</div><div class="rs-label">审计日志完整率</div></div>
+                                    <div class="report-stat"><div class="rs-value text-success">100%</div><div class="rs-label">审批流程合规率</div></div>
+                                    <div class="report-stat"><div class="rs-value text-success">0</div><div class="rs-label">违规操作次数</div></div>
+                                    <div class="report-stat"><div class="rs-value text-success">365</div><div class="rs-label">日志保留天数</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- 文档查看弹窗 -->
+        <div class="modal-overlay" v-if="showModal" @click.self="showModal=false">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">{{ modalData ? modalData.caseTitle : '' }} - CDA文档详情</h3>
+                    <button class="modal-close" @click="showModal=false">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="cda-preview" v-if="modalData">
+                        <div class="cda-section">
+                            <h4>患者信息</h4>
+                            <div class="info-grid">
+                                <div class="info-item"><label>EMPI:</label><span>{{ modalData.empi }}</span></div>
+                                <div class="info-item"><label>姓名:</label><span>{{ modalData.name }}</span></div>
+                                <div class="info-item"><label>患者ID:</label><span>{{ modalData.patientId }}</span></div>
+                                <div class="info-item"><label>身份证号:</label><span>{{ modalData.idcard }}</span></div>
+                                <div class="info-item"><label>就诊科室:</label><span>{{ modalData.department }}</span></div>
+                                <div class="info-item"><label>入院时间:</label><span>{{ modalData.admissionDate }}</span></div>
+                            </div>
+                        </div>
+                        <div class="cda-section">
+                            <h4>CDA文档结构</h4>
+                            <div class="cda-tree">
+                                <div class="tree-node"><span class="tree-icon">&#128196;</span><span>ClinicalDocument</span></div>
+                                <div class="tree-node child"><span class="tree-icon">&#128196;</span><span>recordTarget</span></div>
+                                <div class="tree-node child"><span class="tree-icon">&#128196;</span><span>author</span></div>
+                                <div class="tree-node child"><span class="tree-icon">&#128196;</span><span>custodian</span></div>
+                                <div class="tree-node child"><span class="tree-icon">&#128196;</span><span>component</span></div>
+                                <div class="tree-node grandchild"><span class="tree-icon">&#128196;</span><span>structuredBody</span></div>
+                                <div class="tree-node great-grandchild"><span class="tree-icon">&#128196;</span><span>section ({{ modalData.caseTitle }})</span></div>
+                            </div>
+                        </div>
+                        <div class="cda-section">
+                            <h4>文档状态</h4>
+                            <div class="status-badge status-generated">已生成</div>
+                            <p style="margin-top:8px;color:#666;">文档已通过格式校验，符合HL7 CDA R2标准</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" @click="showModal=false">关闭</button>
+                    <button class="btn btn-primary" @click="downloadCDA">下载CDA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
