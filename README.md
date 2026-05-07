@@ -13,6 +13,30 @@
 | 数据源管理 | HIS/LIS/PACS/EMR等系统对接、连接状态监控、接口日志 |
 | 数据删除 | 删除申请、审批流程、审计日志、合规报告 |
 
+## 系统截图
+
+### 登录页面
+![登录页面](screenshots/01-login.png)
+
+### CDA概览仪表盘
+![CDA概览](screenshots/02-overview.png)
+
+### 文档检索
+![文档检索](screenshots/03-search.png)
+
+### 文档列表
+![文档列表](screenshots/04-doclist.png)
+
+### 标准管理
+![标准管理](screenshots/05-standard.png)
+
+### 数据源管理
+![数据源管理](screenshots/06-datasource.png)
+
+### 数据删除
+![数据删除](screenshots/07-delete.png)
+
+
 ## 技术栈
 
 - **前端**: Vue 2.7 + HTML5 + CSS3 + 原生 JavaScript
