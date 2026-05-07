@@ -15,26 +15,29 @@
 
 ## 系统截图
 
+## 系统截图
+
 ### 登录页面
-![登录页面](screenshots/01-login.png)
+![登录页面](01-login.png)
 
 ### CDA概览仪表盘
-![CDA概览](screenshots/02-overview.png)
+![CDA概览](02-overview.png)
 
 ### 文档检索
-![文档检索](screenshots/03-search.png)
+![文档检索](03-search.png)
 
 ### 文档列表
-![文档列表](screenshots/04-doclist.png)
+![文档列表](04-doclist.png)
 
 ### 标准管理
-![标准管理](screenshots/05-standard.png)
+![标准管理](05-standard.png)
 
 ### 数据源管理
-![数据源管理](screenshots/06-datasource.png)
+![数据源管理](06-datasource.png)
 
 ### 数据删除
-![数据删除](screenshots/07-delete.png)
+![数据删除](07-delete.png)
+
 
 
 ## 技术栈
